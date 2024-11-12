@@ -321,9 +321,9 @@
     startY += 10;
 
     // Información del equipo
-    doc.text(`Equipo Local: ${document.getElementById("local-team").value}`, marginX, startY);
+    doc.text(`Equipo Local: ${document.getElementById("local-team").value} - ${document.getElementById("goles-marcados").textContent}`, marginX, startY);
     startY += lineHeight;
-    doc.text(`Equipo Visitante: ${document.getElementById("visitor-team").value}`, marginX, startY);
+    doc.text(`Equipo Visitante: ${document.getElementById("visitor-team").value} - ${document.getElementById("goles-recibidos").textContent}`, marginX, startY);
     startY += lineHeight * 2;
 
     // Información del portero en cuadro
