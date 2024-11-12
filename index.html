@@ -1,0 +1,306 @@
+<html>
+<head>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+    .container {
+        max-width: 100%;
+        margin: auto;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    .section {
+        margin-bottom: 20px;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 20px;
+    }
+    .input-group {
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .input-group label {
+        font-weight: bold;
+        margin-right: 10px;
+    }
+    .inline-input {
+        display: inline-block;
+        width: calc(50% - 20px); /* Cambia el ancho a 50% menos márgenes para adaptarse a pantallas más pequeñas */
+        margin: 5px 10px;
+        box-sizing: border-box;
+    }
+    .stats-container {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .stat-item {
+        margin-right: 10px;
+        text-align: center;
+        width: 48%; /* Haz que cada estadística ocupe la mitad del ancho */
+        margin-bottom: 10px;
+    }
+    .stat-item label {
+        display: block;
+        font-weight: bold;
+    }
+    button {
+        padding: 10px 15px;
+        margin-top: 10px;
+        width: 100%; /* Haz que los botones ocupen el ancho completo en pantallas pequeñas */
+        box-sizing: border-box;
+    }
+    .active {
+        color: red;
+    }
+    .inactive {
+        color: black;
+    }
+
+    /* Ajustes para pantallas pequeñas */
+    @media (max-width: 600px) {
+        .inline-input {
+            width: 100%; /* Ajusta el ancho al 100% en pantallas pequeñas */
+        }
+        .stat-item {
+            width: 100%; /* Las estadísticas ocuparán el 100% del ancho en pantallas pequeñas */
+        }
+    }
+</style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Partido de Hockey</h1>
+        
+        <!-- Información del partido -->
+        <div class="section" id="match-info">
+            <h2>Información del Partido</h2>
+            <div class="input-group">
+                <label for="local-team">Equipo Local</label>
+                <input type="text" id="local-team" placeholder="Nombre del equipo local">
+            </div>
+            <div class="input-group">
+                <label for="visitor-team">Equipo Visitante</label>
+                <input type="text" id="visitor-team" placeholder="Nombre del equipo visitante">
+            </div>
+            <button onclick="showPlayerScreen()">Continuar a Jugadores y Portero</button>
+        </div>
+        
+        <!-- Pantalla de jugadores y portero -->
+        <div class="section" id="players-screen" style="display: none;">
+            <h2>Portero</h2>
+            <div class="input-group">
+                <input type="text" id="goalkeeper-name" placeholder="Nombre del portero" class="inline-input inactive">
+                <input type="number" id="goalkeeper-number" min="1" max="99" placeholder="Número" class="inline-input">
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <label>Goles recibidos</label>
+                        <input type="number" id="goalkeeper-goals" min="0" value="0">
+                    </div>
+                    <div class="stat-item">
+                        <label>Paradas</label>
+                        <input type="number" id="goalkeeper-saves" min="0" value="0">
+                    </div>
+                    <div class="stat-item">
+                        <label>Chutes fuera</label>
+                        <input type="number" id="goalkeeper-chutes" min="0" value="0">
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <label>Tiempo en cancha</label>
+                    <span id="goalkeeper-timer">00:00</span>
+                    <button onclick="startTimer('goalkeeper')">Iniciar</button>
+                    <button onclick="stopTimer('goalkeeper')">Parar</button>
+                </div>
+                <div class="Tiempo muerto">
+                    <label>Tiempo muerto</label>
+                    <span id="goalkeeper-timer">00:00</span>
+                    <button onclick="startTimer('goalkeeper')">Iniciar</button>
+                    <button onclick="stopTimer('goalkeeper')">Parar</button>
+                </div>
+            </div>
+            
+            <h2>Jugadores</h2>
+            <div id="player-container">
+                <!-- Campos de jugadores generados dinámicamente -->
+            </div>
+            <!-- Botones para "Volver al inicio", "Grabar", y "Generar PDF" -->
+            <button onclick="goBack()">Volver al inicio</button>
+            <button onclick="saveData()">Grabar</button>
+            <button onclick="generatePDF()">Generar PDF</button>
+            <button id="tiempomuerto-button" onclick="tiempomuerto()">Tiempo muerto</button>
+        </div>
+    </div>
+    
+    <script>
+        const timers = {};
+        const elapsedTime = {};
+        let isTiempoMuerto = false;
+
+        function startTimer(id) {
+            if (!timers[id]) {
+                elapsedTime[id] = elapsedTime[id] || 0;
+                timers[id] = setInterval(() => {
+                    elapsedTime[id]++;
+                    const minutes = Math.floor(elapsedTime[id] / 60).toString().padStart(2, '0');
+                    const seconds = (elapsedTime[id] % 60).toString().padStart(2, '0');
+                    document.getElementById(`${id}-timer`).innerText = `${minutes}:${seconds}`;
+                }, 1000);
+                document.getElementById(`${id}-name`).classList.remove('inactive');
+                document.getElementById(`${id}-name`).classList.add('active');
+            }
+        }
+
+        function stopTimer(id) {
+            clearInterval(timers[id]);
+            timers[id] = null;
+            document.getElementById(`${id}-name`).classList.remove('active');
+            document.getElementById(`${id}-name`).classList.add('inactive');
+        }
+
+        function showPlayerScreen() {
+            document.getElementById('match-info').style.display = 'none';
+            document.getElementById('players-screen').style.display = 'block';
+            loadPlayers();
+        }
+        // Tiempo muerto
+
+        function tiempomuerto () {
+            isTiempoMuerto = !isTiempoMuerto;
+            if (isTiempoMuerto) {
+                document.getElementById('tiempomuerto-button').classList.remove('inactive');
+                document.getElementById('tiempomuerto-button').classList.add('active');
+            } else {
+                document.getElementById('tiempomuerto-button').classList.remove('active');
+                document.getElementById('tiempomuerto-button').classList.add('inactive');
+            }
+            
+            for (const id in timers) {
+                if (isTiempoMuerto) {
+                    stopTimer(id);
+                } else {
+                    startTimer(id);
+                }
+            }
+        }
+        function loadPlayers() {
+            const playerContainer = document.getElementById('player-container');
+            playerContainer.innerHTML = '';
+            for (let i = 1; i <= 6; i++) {
+                playerContainer.innerHTML += `
+                    <div class="input-group">
+                        <input type="text" placeholder="Nombre del jugador" id="player${i}-name" class="inline-input inactive">
+                        <input type="number" min="1" max="99" placeholder="Número" id="player${i}-number" class="inline-input">
+                        <div class="stats-container">
+                            <div class="stat-item">
+                                <label>Goles</label>
+                                <input type="number" min="0" value="0" id="player${i}-goals">
+                            </div>
+                            <div class="stat-item">
+                                <label>Perdidas</label>
+                                <input type="number" min="0" value="0" id="player${i}-lostBalls">
+                            </div>
+                            <div class="stat-item">
+                                <label>Recuperadas</label>
+                                <input type="number" min="0" value="0" id="player${i}-recoveredBalls">
+                            </div>
+                            <div class="stat-item">
+                                <label>Faltas</label>
+                                <input type="number" min="0" value="0" id="player${i}-fouls">
+                            </div>
+                            <div class="stat-item">
+                                <label>Directas</label>
+                                <input type="number" min="0" value="0" id="player${i}-directFouls">
+                            </div>
+                            <div class="stat-item">
+                                <label>Penaltis</label>
+                                <input type="number" min="0" value="0" id="player${i}-penalties">
+                            </div>
+                            <div class="stat-item">
+                                <label>Azules</label>
+                                <input type="number" min="0" value="0" id="player${i}-blueCards">
+                            </div>
+                            <div class="stat-item">
+                                <label>Chutes</label>
+                                <input type="number" min="0" value="0" id="player${i}-chutes">
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <label>Tiempo en cancha</label>
+                            <span id="player${i}-timer">00:00</span>
+                            <button onclick="startTimer('player${i}')">Iniciar</button>
+                            <button onclick="stopTimer('player${i}')">Parar</button>
+                        </div>
+                    </div>`;
+            }
+        }
+
+        function goBack() {
+            document.getElementById('players-screen').style.display = 'none';
+            document.getElementById('match-info').style.display = 'block';
+        }
+
+        function saveData() {
+            alert("Los datos han sido grabados correctamente.");
+        }
+        async function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF("p", "mm", "a4"); // Formato A4
+    const marginX = 10;
+    let startY = 15;
+    const boxWidth = 90; // Ancho de cada recuadro
+    const boxHeight = 35; // Altura de cada recuadro para cada jugador
+    const lineHeight = 5; // Altura de línea dentro de los cuadros
+
+    doc.setFontSize(12);
+    doc.text("Resumen del Partido de Hockey", marginX, startY);
+    doc.setFontSize(10);
+    startY += 10;
+
+    // Información del equipo
+    doc.text(`Equipo Local: ${document.getElementById("local-team").value}`, marginX, startY);
+    startY += lineHeight;
+    doc.text(`Equipo Visitante: ${document.getElementById("visitor-team").value}`, marginX, startY);
+    startY += lineHeight * 2;
+
+    // Información del portero en cuadro
+    doc.rect(marginX, startY, boxWidth * 2 + 10, boxHeight); // Rectángulo para el portero
+    doc.text("Portero", marginX + 2, startY + lineHeight);
+    doc.text(`Nombre: ${document.getElementById("goalkeeper-name").value}`, marginX + 2, startY + lineHeight * 2);
+    doc.text(`Número: ${document.getElementById("goalkeeper-number").value}`, marginX + boxWidth, startY + lineHeight * 2);
+    doc.text(`Goles Recibidos: ${document.getElementById("goalkeeper-goals").value}`, marginX + 2, startY + lineHeight * 3);
+    doc.text(`Paradas: ${document.getElementById("goalkeeper-saves").value}`, marginX + boxWidth, startY + lineHeight * 3);
+    doc.text(`Chutes fuera: ${document.getElementById("goalkeeper-chutes").value}`, marginX + 2, startY + lineHeight * 4);
+    doc.text(`Tiempo en cancha: ${document.getElementById("goalkeeper-timer").textContent}`, marginX + boxWidth, startY + lineHeight * 4);
+    startY += boxHeight + 5; // Espacio después del portero
+
+    // Información de jugadores en cuadros
+    for (let i = 1; i <= 6; i++) {
+        const playerX = marginX + ((i - 1) % 2) * (boxWidth + 10); // Alternar entre dos columnas
+        const playerY = startY + Math.floor((i - 1) / 2) * (boxHeight + 5); // Posición Y para cada fila
+
+        doc.rect(playerX, playerY, boxWidth, boxHeight); // Crear recuadro para cada jugador
+        doc.text(`Jugador ${i}`, playerX + 2, playerY + lineHeight);
+        doc.text(`Nombre: ${document.getElementById(`player${i}-name`).value}`, playerX + 2, playerY + lineHeight * 2);
+        doc.text(`Número: ${document.getElementById(`player${i}-number`).value}`, playerX + boxWidth / 2, playerY + lineHeight * 2);
+        doc.text(`Goles: ${document.getElementById(`player${i}-goals`).value}`, playerX + 2, playerY + lineHeight * 3);
+        doc.text(`Perdidas: ${document.getElementById(`player${i}-lostBalls`).value}`, playerX + boxWidth / 2, playerY + lineHeight * 3);
+        doc.text(`Recuperadas: ${document.getElementById(`player${i}-recoveredBalls`).value}`, playerX + 2, playerY + lineHeight * 4);
+        doc.text(`Faltas: ${document.getElementById(`player${i}-fouls`).value}`, playerX + boxWidth / 2, playerY + lineHeight * 4);
+        doc.text(`Directas: ${document.getElementById(`player${i}-directFouls`).value}`, playerX + 2, playerY + lineHeight * 5);
+        doc.text(`Penaltis: ${document.getElementById(`player${i}-penalties`).value}`, playerX + boxWidth / 2, playerY + lineHeight * 5);
+        doc.text(`Azules: ${document.getElementById(`player${i}-blueCards`).value}`, playerX + 2, playerY + lineHeight * 6);
+        doc.text(`Chutes: ${document.getElementById(`player${i}-chutes`).value}`, playerX + boxWidth / 2, playerY + lineHeight * 6);
+        doc.text(`Tiempo: ${document.getElementById(`player${i}-timer`).textContent}`, playerX + 2, playerY + lineHeight * 7);
+    }
+
+    doc.save("Resumen_Partido_Hockey.pdf");
+}
+    </script>
+</body>
+</html>
