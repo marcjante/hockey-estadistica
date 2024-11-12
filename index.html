@@ -59,6 +59,9 @@
     .inactive {
         color: black;
     }
+    #portero-2 {
+        display: none;
+    }
 
     /* Ajustes para pantallas pequeñas */
     @media (max-width: 600px) {
@@ -93,33 +96,62 @@
         
         <!-- Pantalla de jugadores y portero -->
         <div class="section" id="players-screen" style="display: none;">
-            <h2>Portero</h2>
-            <div class="input-group">
-                <input type="text" id="goalkeeper-name" placeholder="Nombre del portero" class="inline-input inactive">
-                <input type="number" id="goalkeeper-number" min="1" max="99" placeholder="Número" class="inline-input">
+            <h2>Resultado:</h2>
+            <div>
+                Local: <span id="goles-marcados"></span>
+            </div>
+            <div>
+                Visitante: <span id="goles-recibidos"></span>
+            </div>
+            <h2>Portero 1</h2>
+            <button id="portero1-button" onclick="togglePortero(1)">Ocultar</button>
+            <div id="portero-1" class="input-group">
+                <input type="text" id="goalkeeper-1-name" placeholder="Nombre del portero" class="inline-input inactive">
+                <input type="number" id="goalkeeper-1-number" min="1" max="99" placeholder="Número" class="inline-input">
                 <div class="stats-container">
                     <div class="stat-item">
                         <label>Goles recibidos</label>
-                        <input type="number" id="goalkeeper-goals" min="0" value="0">
+                        <input type="number" id="goalkeeper-1-goals" min="0" value="0" onchange="updateGoals()">
                     </div>
                     <div class="stat-item">
                         <label>Paradas</label>
-                        <input type="number" id="goalkeeper-saves" min="0" value="0">
+                        <input type="number" id="goalkeeper-1-saves" min="0" value="0">
                     </div>
                     <div class="stat-item">
                         <label>Chutes fuera</label>
-                        <input type="number" id="goalkeeper-chutes" min="0" value="0">
+                        <input type="number" id="goalkeeper-1-chutes" min="0" value="0">
                     </div>
                 </div>
                 <div class="stat-item">
                     <label>Tiempo en cancha</label>
-                    <span id="goalkeeper-timer">00:00</span>
+                    <span id="goalkeeper-1-timer">00:00</span>
                     <button onclick="startTimer('goalkeeper')">Iniciar</button>
                     <button onclick="stopTimer('goalkeeper')">Parar</button>
                 </div>
-                <div class="Tiempo muerto">
-                    <label>Tiempo muerto</label>
-                    <span id="goalkeeper-timer">00:00</span>
+            </div>
+
+            <h2>Portero 2</h2>
+            <button id="portero2-button" onclick="togglePortero(2)">Mostrar</button>
+            <div id="portero-2" class="input-group">
+                <input type="text" id="goalkeeper-2-name" placeholder="Nombre del portero" class="inline-input inactive">
+                <input type="number" id="goalkeeper-2-number" min="1" max="99" placeholder="Número" class="inline-input">
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <label>Goles recibidos</label>
+                        <input type="number" id="goalkeeper-2-goals" min="0" value="0" onchange="updateGoals()">
+                    </div>
+                    <div class="stat-item">
+                        <label>Paradas</label>
+                        <input type="number" id="goalkeeper-2-saves" min="0" value="0">
+                    </div>
+                    <div class="stat-item">
+                        <label>Chutes fuera</label>
+                        <input type="number" id="goalkeeper-2-chutes" min="0" value="0">
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <label>Tiempo en cancha</label>
+                    <span id="goalkeeper-2-timer">00:00</span>
                     <button onclick="startTimer('goalkeeper')">Iniciar</button>
                     <button onclick="stopTimer('goalkeeper')">Parar</button>
                 </div>
@@ -131,7 +163,6 @@
             </div>
             <!-- Botones para "Volver al inicio", "Grabar", y "Generar PDF" -->
             <button onclick="goBack()">Volver al inicio</button>
-            <button onclick="saveData()">Grabar</button>
             <button onclick="generatePDF()">Generar PDF</button>
             <button id="tiempomuerto-button" onclick="tiempomuerto()">Tiempo muerto</button>
         </div>
@@ -188,10 +219,38 @@
                 }
             }
         }
+
+        // Mostrar/ocultar porteros
+        function togglePortero(id) {
+            const display = document.getElementById(`portero-${id}`).style.display;
+            if (display === 'none' || !display) {
+                document.getElementById(`portero-${id}`).style.display = 'block';
+                document.getElementById(`portero${id}-button`).innerHTML = 'Ocultar';
+            } else {
+                document.getElementById(`portero-${id}`).style.display = 'none';
+                document.getElementById(`portero${id}-button`).innerHTML = 'Mostrar';
+            }
+        }
+
+        // Actualizar goles
+        function updateGoals() {
+            let scoredGoals = 0;
+            document.querySelectorAll('[id^="player"][id$="goals"]').forEach((input) => {
+                scoredGoals += Number(input.value);
+            });
+            document.getElementById('goles-marcados').textContent = scoredGoals
+
+            let receivedGoals = 0;
+            document.querySelectorAll('[id^="goalkeeper"][id$="goals"]').forEach((input) => {
+                receivedGoals += Number(input.value);
+            });
+            document.getElementById('goles-recibidos').textContent = receivedGoals
+        }
+
         function loadPlayers() {
             const playerContainer = document.getElementById('player-container');
             playerContainer.innerHTML = '';
-            for (let i = 1; i <= 6; i++) {
+            for (let i = 1; i <= 8; i++) {
                 playerContainer.innerHTML += `
                     <div class="input-group">
                         <input type="text" placeholder="Nombre del jugador" id="player${i}-name" class="inline-input inactive">
@@ -199,7 +258,7 @@
                         <div class="stats-container">
                             <div class="stat-item">
                                 <label>Goles</label>
-                                <input type="number" min="0" value="0" id="player${i}-goals">
+                                <input type="number" min="0" value="0" id="player${i}-goals" onchange="updateGoals()">
                             </div>
                             <div class="stat-item">
                                 <label>Perdidas</label>
@@ -238,6 +297,8 @@
                         </div>
                     </div>`;
             }
+
+            //document.querySelectorAll('[id^="player"][id$="goals"]').forEach((input))
         }
 
         function goBack() {
@@ -245,9 +306,6 @@
             document.getElementById('match-info').style.display = 'block';
         }
 
-        function saveData() {
-            alert("Los datos han sido grabados correctamente.");
-        }
         async function generatePDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("p", "mm", "a4"); // Formato A4
@@ -271,16 +329,26 @@
     // Información del portero en cuadro
     doc.rect(marginX, startY, boxWidth * 2 + 10, boxHeight); // Rectángulo para el portero
     doc.text("Portero", marginX + 2, startY + lineHeight);
-    doc.text(`Nombre: ${document.getElementById("goalkeeper-name").value}`, marginX + 2, startY + lineHeight * 2);
-    doc.text(`Número: ${document.getElementById("goalkeeper-number").value}`, marginX + boxWidth, startY + lineHeight * 2);
-    doc.text(`Goles Recibidos: ${document.getElementById("goalkeeper-goals").value}`, marginX + 2, startY + lineHeight * 3);
-    doc.text(`Paradas: ${document.getElementById("goalkeeper-saves").value}`, marginX + boxWidth, startY + lineHeight * 3);
-    doc.text(`Chutes fuera: ${document.getElementById("goalkeeper-chutes").value}`, marginX + 2, startY + lineHeight * 4);
-    doc.text(`Tiempo en cancha: ${document.getElementById("goalkeeper-timer").textContent}`, marginX + boxWidth, startY + lineHeight * 4);
+    doc.text(`Nombre: ${document.getElementById("goalkeeper-1-name").value}`, marginX + 2, startY + lineHeight * 2);
+    doc.text(`Número: ${document.getElementById("goalkeeper-1-number").value}`, marginX + boxWidth, startY + lineHeight * 2);
+    doc.text(`Goles Recibidos: ${document.getElementById("goalkeeper-1-goals").value}`, marginX + 2, startY + lineHeight * 3);
+    doc.text(`Paradas: ${document.getElementById("goalkeeper-1-saves").value}`, marginX + boxWidth, startY + lineHeight * 3);
+    doc.text(`Chutes fuera: ${document.getElementById("goalkeeper-1-chutes").value}`, marginX + 2, startY + lineHeight * 4);
+    doc.text(`Tiempo en cancha: ${document.getElementById("goalkeeper-1-timer").textContent}`, marginX + boxWidth, startY + lineHeight * 4);
+    startY += boxHeight + 5; // Espacio después del portero
+
+    doc.rect(marginX, startY, boxWidth * 2 + 10, boxHeight); // Rectángulo para el portero
+    doc.text("Portero 2", marginX + 2, startY + lineHeight);
+    doc.text(`Nombre: ${document.getElementById("goalkeeper-2-name").value}`, marginX + 2, startY + lineHeight * 2);
+    doc.text(`Número: ${document.getElementById("goalkeeper-2-number").value}`, marginX + boxWidth, startY + lineHeight * 2);
+    doc.text(`Goles Recibidos: ${document.getElementById("goalkeeper-2-goals").value}`, marginX + 2, startY + lineHeight * 3);
+    doc.text(`Paradas: ${document.getElementById("goalkeeper-2-saves").value}`, marginX + boxWidth, startY + lineHeight * 3);
+    doc.text(`Chutes fuera: ${document.getElementById("goalkeeper-2-chutes").value}`, marginX + 2, startY + lineHeight * 4);
+    doc.text(`Tiempo en cancha: ${document.getElementById("goalkeeper-2-timer").textContent}`, marginX + boxWidth, startY + lineHeight * 4);
     startY += boxHeight + 5; // Espacio después del portero
 
     // Información de jugadores en cuadros
-    for (let i = 1; i <= 6; i++) {
+    for (let i = 1; i <= 8; i++) {
         const playerX = marginX + ((i - 1) % 2) * (boxWidth + 10); // Alternar entre dos columnas
         const playerY = startY + Math.floor((i - 1) / 2) * (boxHeight + 5); // Posición Y para cada fila
 
